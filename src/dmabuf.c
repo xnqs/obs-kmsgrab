@@ -75,10 +75,37 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 	struct sockaddr_un addr = {0};
 	addr.sun_family = AF_UNIX;
 	{
-        /* Hardcoding socket path to somewhere that doesn't give errno 13 (permission denied) in OBS. 
-         * You can always change this if you do end up finding a better path for the socket file in your use case. */
-        strcpy(addr.sun_path, "/tmp/obs_drmsend.sock");
-		
+        /* The following socket path is in /run/user/UID/linux-kmsgrab.sock.
+         * This should work much better than both the hardcoded /tmp and default socket paths. */
+        char *module_path = calloc(696,sizeof(char));
+        char *user = getenv("USER");
+        char *tmp = calloc(696,sizeof(char));
+
+        strcpy(module_path,"/run/user/");
+        FILE *passwd = fopen("/etc/passwd","r");
+        while (fgets(tmp,695,passwd)!=NULL) {
+            if (strstr(tmp,user)!=NULL) {
+                int x = strlen(user)+3;
+                tmp += x;
+                char *ptr = tmp;
+                while (*ptr>='0'&&*ptr<='9') ++ptr;
+                *ptr = 0;
+                strcat(module_path,tmp);
+                strcat(module_path,"/");
+                tmp -= x;
+                break;
+            }
+        }
+
+        strcat(module_path, PLUGIN_NAME);
+        strcat(module_path, ".sock");
+
+        strcpy(addr.sun_path, module_path);
+        free(module_path);
+        free(tmp);
+        fclose(passwd);
+
+        blog(LOG_INFO, "Will bind socket to %s", addr.sun_path);
         /* The socket path commented out below is flawed, because it 
          * uses a directory that $(whoami) doesn't have access to. -vvv- */
 
@@ -104,7 +131,6 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 		memcpy(addr.sun_path + module_path_len, socket_filename,
 		       socket_filename_len);*/
 
-		blog(LOG_DEBUG, "Will bind socket to %s", addr.sun_path);
 	}
 
 	/* Find linux-kmsgrab-send */
