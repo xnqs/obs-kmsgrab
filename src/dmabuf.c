@@ -59,8 +59,15 @@ typedef struct {
 
 static const char send_binary_name[] = "linux-kmsgrab-send";
 static const size_t send_binary_len = sizeof(send_binary_name) - 1;
-static const char socket_filename[] = "/obs-kmsgrab-send.sock";
-static const int socket_filename_len = sizeof(socket_filename) - 1;
+
+int file_exists(char *path) {
+    FILE *tmp;
+    if (tmp = fopen(path,"r")) {
+        fclose(tmp);
+        return 1;
+    }
+    return 0;
+}
 
 static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 {
@@ -75,26 +82,41 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 	struct sockaddr_un addr = {0};
 	addr.sun_family = AF_UNIX;
 	{
-        /* The following socket path is in /run/user/UID/linux-kmsgrab.sock.
-         * This should work much better than both the hardcoded /tmp and default socket paths. */
+        /* The following socket path is in /run/user/UID/linux-kmsgrab.sock for systemd, and $HOME/.cache/linux-kmsgrab.sock
+         * for everything else. This should work much better than both the hardcoded /tmp and default socket paths. */
         char *module_path = calloc(696,sizeof(char));
         char *user = getenv("USER");
         char *tmp = calloc(696,sizeof(char));
+        
+        /* use /run/user/UID/linux-kmsgrab.sock if systemd is present */
+        if (file_exists("/usr/lib/systemd/systemd")) { 
+            strcpy(module_path,"/run/user/");
 
-        strcpy(module_path,"/run/user/");
-        FILE *passwd = fopen("/etc/passwd","r");
-        while (fgets(tmp,695,passwd)!=NULL) {
-            if (strstr(tmp,user)!=NULL) {
-                int x = strlen(user)+3;
-                tmp += x;
-                char *ptr = tmp;
-                while (*ptr>='0'&&*ptr<='9') ++ptr;
-                *ptr = 0;
-                strcat(module_path,tmp);
-                strcat(module_path,"/");
-                tmp -= x;
-                break;
+            /* fetch UID from /etc/passwd */
+            FILE *passwd = fopen("/etc/passwd","r");
+            while (fgets(tmp,695,passwd)!=NULL) {
+                if (strstr(tmp,user)!=NULL) {
+                    int x = strlen(user)+3;
+                    tmp += x;
+                    char *ptr = tmp;
+                    while (*ptr>='0'&&*ptr<='9') ++ptr;
+                    *ptr = 0;
+                    strcat(module_path,tmp);
+                    strcat(module_path,"/");
+                    tmp -= x;
+                    break;
+                }
             }
+            fclose(passwd);
+        }
+        
+        /* else use $HOME/.cache/linux-kmsgrab.sock */
+        else {
+            char *home = calloc(696,sizeof(char));
+            strcpy(home,getenv("HOME"));
+            strcat(home,"/.cache/");
+            strcpy(module_path,home);
+            free(home);
         }
 
         strcat(module_path, PLUGIN_NAME);
@@ -103,9 +125,9 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
         strcpy(addr.sun_path, module_path);
         free(module_path);
         free(tmp);
-        fclose(passwd);
 
         blog(LOG_INFO, "Will bind socket to %s", addr.sun_path);
+
         /* The socket path commented out below is flawed, because it 
          * uses a directory that $(whoami) doesn't have access to. -vvv- */
 
