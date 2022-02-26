@@ -61,12 +61,12 @@ static const char send_binary_name[] = "linux-kmsgrab-send";
 static const size_t send_binary_len = sizeof(send_binary_name) - 1;
 
 int file_exists(char *path) {
-    FILE *tmp;
-    if (tmp = fopen(path,"r")) {
-        fclose(tmp);
-        return 1;
-    }
-    return 0;
+	FILE *tmp;
+	if (tmp = fopen(path,"r")) {
+		fclose(tmp);
+		return 1;
+	}
+	return 0;
 }
 
 static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
@@ -82,56 +82,56 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 	struct sockaddr_un addr = {0};
 	addr.sun_family = AF_UNIX;
 	{
-        /* The following socket path is in /run/user/UID/linux-kmsgrab.sock for systemd, and $HOME/.cache/linux-kmsgrab.sock
-         * for everything else. This should work much better than both the hardcoded /tmp and default socket paths. */
-        char *module_path = calloc(696,sizeof(char));
-        char *user = getenv("USER");
-        char *tmp = calloc(696,sizeof(char));
-        
-        /* use /run/user/UID/linux-kmsgrab.sock if systemd is present */
-        if (file_exists("/usr/lib/systemd/systemd")) { 
-            strcpy(module_path,"/run/user/");
+		/* The following socket path is in /run/user/UID/linux-kmsgrab.sock for systemd, and $HOME/.cache/linux-kmsgrab.sock
+		 * for everything else. This should work much better than both the hardcoded /tmp and default socket paths. */
+		char *module_path = calloc(696,sizeof(char));
+		char *user = getenv("USER");
+		char *tmp = calloc(696,sizeof(char));
 
-            /* fetch UID from /etc/passwd */
-            FILE *passwd = fopen("/etc/passwd","r");
-            while (fgets(tmp,695,passwd)!=NULL) {
-                if (strstr(tmp,user)!=NULL) {
-                    int x = strlen(user)+3;
-                    tmp += x;
-                    char *ptr = tmp;
-                    while (*ptr>='0'&&*ptr<='9') ++ptr;
-                    *ptr = 0;
-                    strcat(module_path,tmp);
-                    strcat(module_path,"/");
-                    tmp -= x;
-                    break;
-                }
-            }
-            fclose(passwd);
-        }
-        
-        /* else use $HOME/.cache/linux-kmsgrab.sock */
-        else {
-            char *home = calloc(696,sizeof(char));
-            strcpy(home,getenv("HOME"));
-            strcat(home,"/.cache/");
-            strcpy(module_path,home);
-            free(home);
-        }
+		/* use /run/user/UID/linux-kmsgrab.sock if systemd is present */
+		if (file_exists("/usr/lib/systemd/systemd")) { 
+			strcpy(module_path,"/run/user/");
 
-        strcat(module_path, PLUGIN_NAME);
-        strcat(module_path, ".sock");
+			/* fetch UID from /etc/passwd */
+			FILE *passwd = fopen("/etc/passwd","r");
+			while (fgets(tmp,695,passwd)!=NULL) {
+				if (strstr(tmp,user)!=NULL) {
+					int x = strlen(user)+3;
+					tmp += x;
+					char *ptr = tmp;
+					while (*ptr>='0'&&*ptr<='9') ++ptr;
+					*ptr = 0;
+					strcat(module_path,tmp);
+					strcat(module_path,"/");
+					tmp -= x;
+					break;
+				}
+			}
+			fclose(passwd);
+		}
+		
+		/* else use $HOME/.cache/linux-kmsgrab.sock */
+		else {
+			char *home = calloc(696,sizeof(char));
+			strcpy(home,getenv("HOME"));
+			strcat(home,"/.cache/");
+			strcpy(module_path,home);
+			free(home);
+		}
 
-        strcpy(addr.sun_path, module_path);
-        free(module_path);
-        free(tmp);
+		strcat(module_path, PLUGIN_NAME);
+		strcat(module_path, ".sock");
 
-        blog(LOG_INFO, "Will bind socket to %s", addr.sun_path);
+		strcpy(addr.sun_path, module_path);
+		free(module_path);
+		free(tmp);
 
-        /* The socket path commented out below is flawed, because it 
-         * uses a directory that $(whoami) doesn't have access to. -vvv- */
+		blog(LOG_INFO, "Will bind socket to %s", addr.sun_path);
 
-        /*const char *const module_path =
+		/* The socket path commented out below is flawed, because it 
+		 * uses a directory that $(whoami) doesn't have access to. -vvv- */
+
+		/*const char *const module_path =
 			obs_get_module_data_path(obs_current_module());
 		assert(module_path);
 		if (!os_file_exists(module_path)) {
@@ -675,8 +675,8 @@ struct obs_source_info dmabuf_input = {
 	.get_defaults = dmabuf_source_get_defaults,
 	.get_properties = dmabuf_source_get_properties,
 	.update = dmabuf_source_update,
-    /* -vvv- changed icon from empty file to monitor */
-    .icon_type = OBS_ICON_TYPE_DESKTOP_CAPTURE,
+	/* -vvv- changed icon from empty file to monitor */
+	.icon_type = OBS_ICON_TYPE_DESKTOP_CAPTURE,
 };
 
 OBS_DECLARE_MODULE()
