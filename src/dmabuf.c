@@ -60,15 +60,6 @@ typedef struct {
 static const char send_binary_name[] = "linux-kmsgrab-send";
 static const size_t send_binary_len = sizeof(send_binary_name) - 1;
 
-int file_exists(char *path) {
-	FILE *tmp;
-	if (tmp = fopen(path,"r")) {
-		fclose(tmp);
-		return 1;
-	}
-	return 0;
-}
-
 static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 {
 	const char *dri_filename = "/dev/dri/card0"; // FIXME
@@ -82,14 +73,14 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 	struct sockaddr_un addr = {0};
 	addr.sun_family = AF_UNIX;
 	{
-		/* The following socket path is in /run/user/UID/linux-kmsgrab.sock for systemd, and $HOME/.cache/linux-kmsgrab.sock
-		 * for everything else. This should work much better than both the hardcoded /tmp and default socket paths. */
+		/* The following socket path is in /run/user/UID/linux-kmsgrab.sock if available, and $HOME/.cache/linux-kmsgrab.sock
+		 * if it's not. This should work much better than both the hardcoded /tmp and default socket paths. */
 		char *module_path = calloc(696,sizeof(char));
 		char *user = getenv("USER");
 		char *tmp = calloc(696,sizeof(char));
 
-		/* use /run/user/UID/linux-kmsgrab.sock if systemd is present */
-		if (file_exists("/usr/lib/systemd/systemd")) { 
+		/* use /run/user/UID/linux-kmsgrab.sock if dir exists */
+		if (os_file_exists("/run/user/")) { 
 			strcpy(module_path,getenv("XDG_RUNTIME_DIR"));
 			strcat(module_path,"/");
 		}
