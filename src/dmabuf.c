@@ -90,24 +90,8 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 
 		/* use /run/user/UID/linux-kmsgrab.sock if systemd is present */
 		if (file_exists("/usr/lib/systemd/systemd")) { 
-			strcpy(module_path,"/run/user/");
-
-			/* fetch UID from /etc/passwd */
-			FILE *passwd = fopen("/etc/passwd","r");
-			while (fgets(tmp,695,passwd)!=NULL) {
-				if (strstr(tmp,user)!=NULL) {
-					int x = strlen(user)+3;
-					tmp += x;
-					char *ptr = tmp;
-					while (*ptr>='0'&&*ptr<='9') ++ptr;
-					*ptr = 0;
-					strcat(module_path,tmp);
-					strcat(module_path,"/");
-					tmp -= x;
-					break;
-				}
-			}
-			fclose(passwd);
+			strcpy(module_path,getenv("XDG_RUNTIME_DIR"));
+			strcat(module_path,"/");
 		}
 		
 		/* else use $HOME/.cache/linux-kmsgrab.sock */
