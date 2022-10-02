@@ -1,3 +1,4 @@
+#define ENABLE_WAYLAND true
 #include "drmsend.h"
 #include "xcursor-xcb.h"
 
@@ -5,7 +6,7 @@
 #include <graphics/graphics-internal.h>
 
 #include <obs-module.h>
-#include <obs-nix-platform.h>
+#include <obs/obs-nix-platform.h>
 #include <util/platform.h>
 
 #include <GL/gl.h>
@@ -664,18 +665,22 @@ MODULE_EXPORT const char *obs_module_description(void)
 
 bool obs_module_load(void)
 {
-	if (obs_get_nix_platform() != OBS_NIX_PLATFORM_X11_EGL && obs_get_nix_platform() != OBS_NIX_PLATFORM_WAYLAND) {
+	bool ok = obs_get_nix_platform() == OBS_NIX_PLATFORM_X11_EGL;
+#ifdef ENABLE_WAYLAND
+	ok |= obs_get_nix_platform() == OBS_NIX_PLATFORM_WAYLAND;
+#endif
+	if (!ok) {
 		blog(LOG_ERROR, "linux-dmabuf cannot run on non-EGL platforms");
 		return false;
 	}
 
 	obs_register_source(&dmabuf_input);
-  blog(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
+	blog(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }
 
 void obs_module_unload(void)
 {
 	// TODO deinit things
-  blog(LOG_INFO, "plugin unloaded");
+	blog(LOG_INFO, "plugin unloaded");
 }
