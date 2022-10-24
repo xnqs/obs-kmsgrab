@@ -13,7 +13,6 @@ if(NOT UNIX OR APPLE)
 	message(FATAL_ERROR "This plugin is Linux-only")
 endif()
 
-set(CMAKE_PREFIX_PATH "${QTDIR}")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -23,7 +22,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(LibObs REQUIRED)
-find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
 
 # LOL TODO for this we need cmake >= 3.19 w/ cmake policy CMP0109 set to NEW
 #find_program(POLKIT NAMES pkexec)
@@ -70,14 +68,10 @@ endif()
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
 	"${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api"
-	${Qt5Core_INCLUDES}
-	${Qt5Widgets_INCLUDES}
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
 	libobs
-	Qt5::Core
-	Qt5::Widgets
 )
 
 add_executable(linux-kmsgrab-send src/drmsend.c)
