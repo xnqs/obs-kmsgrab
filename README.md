@@ -38,25 +38,6 @@ sudo setcap cap_sys_admin+ep "$CMAKE_PREFIX_PATH/lib64/obs-plugins/linux-kmsgrab
 ```
 Note that this has serious system-wide security implications: just having this `linux-kmsgrab-send` binary lying around with caps set will make it possible for anyone having local user on your machine to grab any of your screens. Decide for yourself whether that's a concerning threat model for your situation.
 
-# Troubleshooting
-## OBS fails to load linux-kmsgrab
-### OBS console log: `Skipping module linux-kmsgrab due to possible import conflicts`
-This is caused by the following guard condition in obs-studio/libobs/obs-module.c:
-
-```
-if (!can_load_obs_plugin) {
-	blog(LOG_WARNING,
-	     "Skipping module '%s' due to possible "
-	     "import conflicts",
-	     info->bin_path);
-	goto load_failure;
-}
-```
-
-To be completely honest, I have no idea why it doesn't pass this check, so for now we'll have to use a workaround: completely removing that piece of code from obs-module.c. Until I figure out what the problem is, this will work fine for me :).
-
-Recompile obs-studio and it should work. Note that this might cause conflicts with other plugins that you may have installed, so remove any potentially problematic plugins.
-
 ## Known issues
 - there's no way to specify grabbing device (in cause you have more than one GPU), it will just use the first available
 - no sync whatsoever, known to rarily cause weird capture glitches (dirty regions missing for a few seconds)
