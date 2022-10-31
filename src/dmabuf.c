@@ -76,20 +76,38 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 	{
 		/* The following socket path is in /run/user/UID/linux-kmsgrab.sock if available, and $HOME/.cache/linux-kmsgrab.sock
 		 * if it's not. This should work much better than both the hardcoded /tmp and default socket paths. */
+		char *env_p = NULL;
 		char *module_path = calloc(696,sizeof(char));
-		char *user = getenv("USER");
-		char *tmp = calloc(696,sizeof(char));
+
+		if (!module_path) {
+			blog(LOG_ERROR, "Failed to allocate memory for module_path.\n");
+			return 0;
+		}
 
 		/* use /run/user/UID/linux-kmsgrab.sock if dir exists */
-		if (os_file_exists("/run/user/")) { 
-			strcpy(module_path,getenv("XDG_RUNTIME_DIR"));
-			strcat(module_path,"/");
+		if (os_file_exists("/run/user/")) {
+			if (env_p = getenv("XDG_RUNTIME_DIR")) {
+				strcpy(module_path,env_p);
+				strcat(module_path,"/");
+			}
+			else {
+				free(module_path);
+				blog(LOG_ERROR, "Cannot fetch $XDG_RUNTIME_DIR.\n");
+				return 0;
+			}
 		}
 		
 		/* else use $HOME/.cache/linux-kmsgrab.sock */
 		else {
 			char *home = calloc(696,sizeof(char));
-			strcpy(home,getenv("HOME"));
+			if (env_p = getenv("HOME")) {
+				strcpy(home,env_p);
+			}
+			else {
+				free(module_path);
+				blog(LOG_ERROR, "Cannot fetch $HOME.\n");
+				return 0;
+			}
 			strcat(home,"/.cache/");
 			strcpy(module_path,home);
 			free(home);
@@ -100,7 +118,6 @@ static int dmabuf_source_receive_framebuffers(dmabuf_source_fblist_t *list)
 
 		strcpy(addr.sun_path, module_path);
 		free(module_path);
-		free(tmp);
 
 		blog(LOG_INFO, "Will bind socket to %s", addr.sun_path);
 
@@ -593,7 +610,7 @@ static obs_properties_t *dmabuf_source_get_properties(void *data)
 	obs_properties_t *props = obs_properties_create();
 
 	obs_properties_add_bool(props, "show_cursor",
-				obs_module_text("CaptureCursor"));
+				obs_module_text("Capture Cursor"));
 
 	obs_property_t *fb_list = obs_properties_add_list(
 		props, "framebuffer", "Framebuffer to capture",
