@@ -16,6 +16,12 @@ However, on Wayland I'd recommend using something like https://hg.sr.ht/~scoopta
 
 ## Building
 
+### Arch or Arch-based distros
+
+I have a PKGBUILD that you can use right [here](https://github.com/xnqs/pkgbuilds).
+
+### Manually
+
 This plugin works on any OBS 27+. I would still recommend getting the latest OBS 28 if you don't absolutely need OBS 27, though, as OBS 28 completely deprecates old inefficient GLX code, in favor of better EGL code. This means that if you are using OBS 28 you can use both Xcomposite window capture and KMS screen capture. Before OBS 28 we couldn't do this.
 
 `CMAKE_PREFIX_PATH` is the location of your OBS installation. On most systems it is `/usr`.
