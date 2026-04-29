@@ -1,3 +1,5 @@
+## ATTENTION: This project is now deprecated in favor of [obs-kmscap](https://github.com/xnqs/obs-kmscap), which is more performant, uses more modern kernel APIs, and has wider support for newer NVIDIA drivers.
+
 # obs-kmsgrab: fast zero-copy screen capture for Linux ⚡
 
 NOTE: This is a fork of w23's [obs-kmsgrab](https://github.com/w23/obs-kmsgrab), which seems to be no longer receiving updates. This fork minimally modifies a known working older build of obs-kmsgrab and adapts it to work on the latest versions of OBS.
